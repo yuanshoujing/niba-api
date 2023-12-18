@@ -1,0 +1,51 @@
+{
+  "name": "niba-api",
+  "version": "0.1.0",
+  "description": "An easy-to-use RESTful API development framework",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": [
+    "RESTful",
+    "web api"
+  ],
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c",
+    "start": "rollup -c -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:yuanshoujing/niba-api.git"
+  },
+  "author": "袁首京 <yuanshoujing@gmail.com>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@babel/core": "^7.23.5",
+    "@babel/plugin-transform-runtime": "^7.23.4",
+    "@babel/preset-env": "^7.23.5",
+    "@jest/globals": "^29.7.0",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-run": "^3.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
+    "babel-jest": "^29.7.0",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0",
+    "rollup": "^4.6.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-delete": "^2.0.0",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.23.5",
+    "cacache": "^17.1.4",
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.1"
+  }
+}
