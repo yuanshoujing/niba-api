@@ -1,5 +1,6 @@
 import hello from "./handler/hello";
 import post from "./handler/post";
+import { redirect } from "./handler/redirect";
 
 export default [
   {
@@ -10,4 +11,5 @@ export default [
     query: ["x"],
   },
   { path: "/post-test", method: "POST", handler: post },
+  { path: "/redirect", method: "GET", handler: redirect },
 ];

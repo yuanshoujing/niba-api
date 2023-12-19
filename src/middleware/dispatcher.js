@@ -161,6 +161,9 @@ export function dispatcher(routes) {
     }
 
     const result = await handler(params);
+    if (ctx.status >= 300 && ctx.status < 400) {
+      return;
+    }
     ctx.body = result ?? null;
 
     await next();
