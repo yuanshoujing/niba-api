@@ -2,7 +2,11 @@ import cacache from "cacache";
 import path from "path";
 import os from "os";
 
-const cachePath = path.resolve(os.tmpdir(), "mavis_cache");
+let cachePath = path.resolve(os.tmpdir(), "niba_cache");
+
+export function setPath(p) {
+  cachePath = p;
+}
 
 export async function ls() {
   try {

@@ -5,7 +5,7 @@ import { authentication, dispatcher, rjson } from "./middleware";
 import { setLogger, default as log } from "./utils/logger";
 
 export * from "./middleware";
-export * from "./utils/cache";
+export * as cache from "./utils/cache";
 export * from "./utils/aes";
 export { setLogger, default as logger } from "./utils/logger";
 
