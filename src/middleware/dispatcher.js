@@ -109,7 +109,7 @@ export function dispatcher(routes) {
     }
 
     const { route, patterns } = rp;
-    logger.debug("route %o, patterns: %o", route, patterns);
+    logger.debug("--> route %o, patterns: %o", route, patterns);
 
     if (
       typeof route.method === "string" &&
@@ -120,14 +120,14 @@ export function dispatcher(routes) {
     }
 
     const handler = route["handler"];
-    logger.debug("handler: %o, type: %o", handler, typeof handler);
+    logger.debug("--> handler: %o, type: %o", handler, typeof handler);
     if (!handler || typeof handler !== "function") {
       ctx.throw(500, "The handler cannot be found");
       return;
     }
 
     const user = ctx.state.USER;
-    // logger.debug("user: %o", user);
+    logger.debug("--> current user: %o", user);
     if (route.auth && !user) {
       ctx.throw(401);
       return;
@@ -149,6 +149,10 @@ export function dispatcher(routes) {
     if (typeof route.body === "string") {
       Object.assign(params, {
         [route.body]: ctx.request.body,
+      });
+    } else {
+      Object.assign(params, {
+        body: ctx.request.body,
       });
     }
 

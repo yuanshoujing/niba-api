@@ -1,9 +1,11 @@
 import logger from "../utils/logger";
 import { parseToken } from "./token";
 
-export const TOKEN_NAME = "zwat-id";
-
-export function authentication({ getUser, getACL, tokenKey }) {
+export function authentication({
+  userGetter,
+  ACLGetter,
+  tokenParser = parseToken,
+}) {
   return async function (ctx, next) {
     let token = null;
     if (!token) {
@@ -22,19 +24,16 @@ export function authentication({ getUser, getACL, tokenKey }) {
     }
 
     try {
-      const { uid, device } = await parseToken({
-        token,
-        key: tokenKey ?? undefined,
-      });
+      const { uid, device } = await tokenParser({ token });
       logger.debug("uid: %s, device: %s", uid, device);
 
-      if (getUser && typeof getUser === "function") {
-        const user = await getUser({ uid, device });
+      if (userGetter && typeof userGetter === "function") {
+        const user = await userGetter({ uid, device });
         ctx.state.USER = user;
       }
 
-      if (getACL && typeof getACL === "function") {
-        const acl = await getACL({ uid, device });
+      if (ACLGetter && typeof ACLGetter === "function") {
+        const acl = await ACLGetter({ uid, device });
         ctx.state.ACL = acl;
       }
     } catch (e) {
