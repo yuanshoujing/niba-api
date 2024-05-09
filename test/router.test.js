@@ -7,6 +7,7 @@ test("route-test", () => {
   expect(route.test("search/abcs/pxyz")).toBeTruthy();
 
   const params = route.exec("search/abc/p12?abc=1");
+  console.log("%O", params);
   expect(params.slice(1)).toStrictEqual(["abc", "12", "abc=1"]);
   const params1 = route.exec("search/abc");
   expect(params1[1]).toBe("abc");

@@ -43,15 +43,16 @@ function extractParameters(route, fragment) {
   });
 }
 
-function findRoute(routes, fragment) {
+function findRoute(routes, fragment, context = "") {
   for (const route of routes) {
-    const reg = routeToRegExp(route.path);
+    const pathWithContext = `${context}${route.path}`;
+    const reg = routeToRegExp(pathWithContext);
     if (!reg.test(fragment)) {
       continue;
     }
 
     const patterns = {};
-    const names = route.path.match(namedParam);
+    const names = pathWithContext.match(namedParam);
     if (!names) {
       return { route, patterns };
     }
@@ -99,11 +100,11 @@ function reformParams(source, rules) {
   return result;
 }
 
-export function dispatcher(routes) {
+export function dispatcher(routes, context = "") {
   return async function (ctx, next) {
     const fragment = ctx.path;
 
-    const rp = findRoute(routes, fragment);
+    const rp = findRoute(routes, fragment, context);
     if (!rp) {
       return;
     }

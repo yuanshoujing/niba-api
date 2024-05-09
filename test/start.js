@@ -19,6 +19,7 @@ async function aclGetter({ uid, device }) {
 }
 
 serve({
+  context: "/niba",
   routes,
   hostname: "127.0.0.1",
   port: 8080,

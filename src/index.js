@@ -1,3 +1,4 @@
+import http from "http";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 
@@ -10,6 +11,7 @@ export * from "./utils/aes";
 export { setLogger, default as logger } from "./utils/logger";
 
 export function createServer({
+  context = "",
   routes = [],
   plugins = [],
   userGetter = null,
@@ -30,7 +32,7 @@ export function createServer({
   );
 
   app.use(authentication({ userGetter, ACLGetter, tokenParser }));
-  app.use(dispatcher(routes));
+  app.use(dispatcher(routes, context));
   app.use(rjson());
 
   plugins.forEach((p) => {
@@ -51,6 +53,7 @@ export function createServer({
  * @param {function} [params.tokenParser] - token 解释器
  */
 export function serve({
+  context = "",
   routes = [],
   plugins = [],
   hostname = "localhost",
@@ -61,6 +64,7 @@ export function serve({
   logger = null,
 }) {
   const s = createServer({
+    context,
     routes,
     plugins,
     logger,
