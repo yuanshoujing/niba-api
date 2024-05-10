@@ -1,3 +1,5 @@
+import logger from "../utils/logger";
+
 export class NBError extends Error {
   constructor(message, code = 500) {
     super(message);
@@ -81,16 +83,4 @@ export class ServiceUnavailable extends NBError {
   constructor(message = "Service Unavailable") {
     super(message, 503);
   }
-}
-
-export function errorHandle() {
-  return async function (ctx, next) {
-    try {
-      await next();
-    } catch (e) {
-      if (e instanceof NBError) {
-        ctx.throw(e.code, e.message);
-      }
-    }
-  };
 }

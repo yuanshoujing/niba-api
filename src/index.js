@@ -2,7 +2,7 @@ import http from "http";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 
-import { authentication, dispatcher, rjson, errorHandle } from "./middleware";
+import { authentication, dispatcher, rjson } from "./middleware";
 import { setLogger, default as log } from "./utils/logger";
 
 export * from "./middleware";
@@ -33,7 +33,6 @@ export function createServer({
 
   app.use(authentication({ userGetter, ACLGetter, tokenParser }));
   app.use(dispatcher(routes, context));
-  app.use(errorHandle());
   app.use(rjson());
 
   plugins.forEach((p) => {

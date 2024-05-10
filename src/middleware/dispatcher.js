@@ -1,4 +1,5 @@
 import logger from "../utils/logger";
+import { NBError } from "./errors";
 
 const optionalParam = /\((.*?)\)/g;
 const namedParam = /(\(\?)?:\w+/g;
@@ -165,7 +166,19 @@ export function dispatcher(routes, context = "") {
       Object.assign(params, reformParams(ctx.request.query, route.query));
     }
 
-    const result = await handler(params);
+    let result = {};
+
+    try {
+      result = await handler(params);
+    } catch (e) {
+      logger.info("--> error: %O", e);
+      if (e instanceof NBError) {
+        ctx.throw(e.code, e.message);
+      } else {
+        ctx.throw(500, e.message);
+      }
+    }
+
     if (ctx.status >= 300 && ctx.status < 400) {
       return;
     }
