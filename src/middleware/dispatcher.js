@@ -88,14 +88,15 @@ function reformParams(source, rules) {
   for (const [k, v] of Object.entries(source)) {
     const value = csv2arr(v);
 
+    let name = k;
     for (const [hk, hv] of Object.entries(hkv)) {
       if (k === hv) {
-        Object.assign(result, {
-          [hk]: value,
-        });
+        name = hk;
+        break;
       }
-      break;
     }
+
+    Object.assign(result, { [name]: value });
   }
 
   return result;

@@ -1,6 +1,6 @@
 {
   "name": "niba-api",
-  "version": "0.1.9",
+  "version": "0.1.11",
   "description": "An easy-to-use RESTful API development framework",
   "main": "index.js",
   "type": "module",
