@@ -44,8 +44,15 @@ function extractParameters(route, fragment) {
   });
 }
 
-function findRoute(routes, fragment, context = "") {
+function findRoute(routes, method, fragment, context = "") {
   for (const route of routes) {
+    if (
+      typeof route.method === "string" &&
+      route.method.toLowerCase() !== method.toLowerCase()
+    ) {
+      continue;
+    }
+
     const pathWithContext = `${context}${route.path}`;
     const reg = routeToRegExp(pathWithContext);
     if (!reg.test(fragment)) {
@@ -106,21 +113,13 @@ export function dispatcher(routes, context = "") {
   return async function (ctx, next) {
     const fragment = ctx.path;
 
-    const rp = findRoute(routes, fragment, context);
+    const rp = findRoute(routes, ctx.method, fragment, context);
     if (!rp) {
       return;
     }
 
     const { route, patterns } = rp;
     logger.debug("--> route %o, patterns: %o", route, patterns);
-
-    if (
-      typeof route.method === "string" &&
-      ctx.method.toLowerCase() !== route.method.toLowerCase()
-    ) {
-      ctx.throw(405);
-      return;
-    }
 
     const handler = route["handler"];
     logger.debug("--> handler: %o, type: %o", handler, typeof handler);
