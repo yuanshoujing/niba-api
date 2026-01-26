@@ -50,7 +50,6 @@
   },
   "publishConfig": {
     "directory": "dist",
-    "main": "index.js",
-    "registry": "https://registry.npmmirror.com"
+    "main": "index.js"
   }
 }
