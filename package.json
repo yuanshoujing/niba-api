@@ -49,6 +49,8 @@
     "koa-bodyparser": "^4.4.1"
   },
   "publishConfig": {
+    "directory": "dist",
+    "main": "index.js",
     "registry": "https://registry.npmmirror.com"
   }
 }
