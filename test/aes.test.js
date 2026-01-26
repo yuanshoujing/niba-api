@@ -9,7 +9,9 @@ test("aes-test", async () => {
   const y = await decryptText(x, "abc");
   expect(y).toBe(a);
   const x1 = await encryptText(a, "abc");
-  expect(x).toBe(x1);
+  expect(x).not.toBe(x1);
+  const y1 = await decryptText(x1, "abc");
+  expect(y1).toBe(a);
 });
 
 test("aes-niba", async () => {

@@ -27,7 +27,11 @@ export async function getText(key) {
 
 export async function getObject(key) {
   const s = await getText(key);
-  return s && JSON.parse(s);
+  try {
+    return s && JSON.parse(s);
+  } catch {
+    return null;
+  }
 }
 
 export async function setText(key, value) {
@@ -39,7 +43,7 @@ export async function setText(key, value) {
 }
 
 export async function setObject(key, value) {
-  setText(key, JSON.stringify(value));
+  await setText(key, JSON.stringify(value));
 }
 
 export async function evict(key) {
