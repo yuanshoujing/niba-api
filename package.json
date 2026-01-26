@@ -47,5 +47,8 @@
     "cacache": "^17.1.4",
     "koa": "^2.14.2",
     "koa-bodyparser": "^4.4.1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmmirror.com"
   }
 }
