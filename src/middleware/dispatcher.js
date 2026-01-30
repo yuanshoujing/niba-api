@@ -407,11 +407,15 @@ export function dispatcher(routes, context = "") {
       await next();
       return;
     }
-    
+
     if (result !== undefined && result !== null) {
       ctx.body = result;
-    } else if (ctx.body === undefined) {
+    } else {
       ctx.body = null;
+      // Handler 没有返回数据，返回 204 No Content
+      if (ctx.status === 200 || ctx.status === 404) {
+        ctx.status = 204;
+      }
     }
 
     await next();
