@@ -1,6 +1,6 @@
 {
   "name": "niba-api",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "An easy-to-use RESTful API development framework",
   "main": "index.js",
   "type": "module",
@@ -46,7 +46,8 @@
     "@babel/runtime": "^7.23.5",
     "cacache": "^17.1.4",
     "koa": "^2.14.2",
-    "koa-bodyparser": "^4.4.1"
+    "koa-bodyparser": "^4.4.1",
+    "lru-cache": "^11.2.5"
   },
   "publishConfig": {
     "directory": "dist",

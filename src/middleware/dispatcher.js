@@ -1,5 +1,6 @@
 import logger from "../utils/logger";
 import { NBError } from "./errors";
+import { LRUCache } from "lru-cache";
 
 const optionalParam = /\((.*?)\)/g;
 const namedParam = /(\(\?)?:\w+/g;
@@ -13,121 +14,24 @@ const CACHE_CONFIG = {
   enabled: true, // 是否启用缓存
 };
 
-// LRU缓存类（支持TTL）
-class LRUCache {
-  constructor(maxSize = CACHE_CONFIG.maxSize, ttl = CACHE_CONFIG.ttl) {
-    this.maxSize = maxSize;
-    this.ttl = ttl;
-    this.cache = new Map(); // 存储 { value, timestamp }
-    this.accessOrder = [];
-    this.lastCleanup = Date.now();
-  }
-
-  get(key) {
-    if (!this.cache.has(key)) {
-      return null;
-    }
-    
-    const entry = this.cache.get(key);
-    
-    // 检查是否过期
-    if (this.ttl > 0 && Date.now() - entry.timestamp > this.ttl) {
-      this.delete(key);
-      return null;
-    }
-    
-    // 更新访问顺序
-    this.updateAccessOrder(key);
-    
-    return entry.value;
-  }
-
-  set(key, value) {
-    // 定期清理过期条目
-    this.cleanupIfNeeded();
-    
-    // 如果缓存已满，移除最久未使用的条目
-    if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
-      this.evictOldest();
-    }
-    
-    this.cache.set(key, {
-      value,
-      timestamp: Date.now()
-    });
-    
-    // 更新访问顺序
-    this.updateAccessOrder(key);
-    
-    return value;
-  }
-
-  delete(key) {
-    const index = this.accessOrder.indexOf(key);
-    if (index > -1) {
-      this.accessOrder.splice(index, 1);
-    }
-    return this.cache.delete(key);
-  }
-
-  clear() {
-    this.cache.clear();
-    this.accessOrder = [];
-    this.lastCleanup = Date.now();
-  }
-
-  size() {
-    return this.cache.size;
-  }
-
-  // 私有方法
-  updateAccessOrder(key) {
-    const index = this.accessOrder.indexOf(key);
-    if (index > -1) {
-      this.accessOrder.splice(index, 1);
-    }
-    this.accessOrder.push(key);
-  }
-
-  evictOldest() {
-    while (this.accessOrder.length > 0) {
-      const oldestKey = this.accessOrder.shift();
-      if (this.cache.has(oldestKey)) {
-        this.cache.delete(oldestKey);
-        break;
-      }
-    }
-  }
-
-  cleanupIfNeeded() {
-    // 每100次操作清理一次，或者距离上次清理超过1分钟
-    if (this.ttl <= 0 || 
-        (this.cache.size < 100 && Date.now() - this.lastCleanup < 60000)) {
-      return;
-    }
-    
-    const now = Date.now();
-    let cleaned = 0;
-    
-    for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > this.ttl) {
-        this.delete(key);
-        cleaned++;
-      }
-    }
-    
-    this.lastCleanup = now;
-    
-    if (cleaned > 0) {
-      logger.debug(`清理了 ${cleaned} 个过期缓存条目`);
-    }
-  }
-}
-
 // 全局缓存实例
-const routeRegexCache = new LRUCache(); // 路由正则表达式缓存
-const routeMatchCache = new LRUCache(); // 路由匹配结果缓存
-const paramExtractCache = new LRUCache(); // 参数提取缓存
+const routeRegexCache = new LRUCache({
+  max: CACHE_CONFIG.maxSize,
+  ttl: CACHE_CONFIG.ttl,
+  updateAgeOnGet: true,
+});
+
+const routeMatchCache = new LRUCache({
+  max: CACHE_CONFIG.maxSize,
+  ttl: CACHE_CONFIG.ttl,
+  updateAgeOnGet: true,
+});
+
+const paramExtractCache = new LRUCache({
+  max: CACHE_CONFIG.maxSize,
+  ttl: CACHE_CONFIG.ttl,
+  updateAgeOnGet: true,
+});
 
 function csv2arr(source) {
   if (typeof source !== "string") {
@@ -166,9 +70,6 @@ export function enableCache(enabled = true) {
 
 export function setCacheMaxSize(maxSize) {
   CACHE_CONFIG.maxSize = maxSize;
-  routeRegexCache.maxSize = maxSize;
-  routeMatchCache.maxSize = maxSize;
-  paramExtractCache.maxSize = maxSize;
 }
 
 export function setCacheTTL(ttl) {
@@ -184,11 +85,31 @@ export function clearCache() {
   paramExtractCache.clear();
 }
 
+function findRoute(routes, method, fragment, context = "") {
+  if (!CACHE_CONFIG.enabled) {
+    return findRouteUncached(routes, method, fragment, context);
+  }
+  
+  const cacheKey = `${method}:${context}:${fragment}`;
+  const cached = routeMatchCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+  
+  const result = findRouteUncached(routes, method, fragment, context);
+  
+  if (result !== null) {
+    routeMatchCache.set(cacheKey, result);
+  }
+  
+  return result;
+}
+
 export function getCacheStats() {
   return {
-    routeRegexCache: routeRegexCache.size(),
-    routeMatchCache: routeMatchCache.size(),
-    paramExtractCache: paramExtractCache.size(),
+    routeRegexCache: routeRegexCache.size,
+    routeMatchCache: routeMatchCache.size,
+    paramExtractCache: paramExtractCache.size,
     config: { ...CACHE_CONFIG },
   };
 }
@@ -200,12 +121,13 @@ export function routeToRegExp(route) {
   
   const cacheKey = route;
   const cached = routeRegexCache.get(cacheKey);
-  if (cached) {
+  if (cached !== undefined) {
     return cached;
   }
   
   const regex = compileRouteRegex(route);
-  return routeRegexCache.set(cacheKey, regex);
+  routeRegexCache.set(cacheKey, regex);
+  return regex;
 }
 
 function compileRouteRegex(route) {
@@ -228,12 +150,13 @@ function extractParameters(route, fragment) {
   
   const cacheKey = `${route.source}:${fragment}`;
   const cached = paramExtractCache.get(cacheKey);
-  if (cached) {
+  if (cached !== undefined) {
     return cached;
   }
   
   const params = extractParametersUncached(route, fragment);
-  return paramExtractCache.set(cacheKey, params);
+  paramExtractCache.set(cacheKey, params);
+  return params;
 }
 
 function extractParametersUncached(route, fragment) {
@@ -242,21 +165,6 @@ function extractParametersUncached(route, fragment) {
     if (i === params.length - 1) return param || null;
     return param ? decodeURIComponent(param) : null;
   });
-}
-
-function findRoute(routes, method, fragment, context = "") {
-  if (!CACHE_CONFIG.enabled) {
-    return findRouteUncached(routes, method, fragment, context);
-  }
-  
-  const cacheKey = `${method}:${context}:${fragment}`;
-  const cached = routeMatchCache.get(cacheKey);
-  if (cached !== undefined) {
-    return cached;
-  }
-  
-  const result = findRouteUncached(routes, method, fragment, context);
-  return routeMatchCache.set(cacheKey, result);
 }
 
 function findRouteUncached(routes, method, fragment, context = "") {
